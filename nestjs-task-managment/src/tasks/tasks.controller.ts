@@ -6,17 +6,20 @@ import { identity } from 'rxjs';
 import { timingSafeEqual } from 'crypto';
 import { pathToFileURL } from 'url';
 import { GetTasksFiltersDto } from './dto/get.tasks.filter.dto';
+import { TaskStatusValidation } from './pipes/task-status-validation.pipes';
 
 @Controller('tasks')
 export class TasksController {
     constructor(private taskService:TasksService){ }
   /**
-   * Function that call the service for get the tasks
-   * With the get request   
+   * Function that call the service for get all the tasks or in the request call all the task with certain of specific status
+   * or with a specify word in the Title or description
+   * With the get request is also necessary to use the validation with the filters of DTO
+   * and define that validation in the query calling the Validation Pipe
    * @param filterDto a filter for the Query
    */
   @Get()
-  getTasks(@Query() filterDto: GetTasksFiltersDto): Tasks[]{
+  getTasks(@Query(ValidationPipe) filterDto: GetTasksFiltersDto): Tasks[]{
     if(Object.keys(filterDto).length){
         return this.taskService.getTasksWithFilters(filterDto);
     }
@@ -50,13 +53,15 @@ export class TasksController {
   }
   /**
    * Update the status of the task
+   * The param with the id because is the id task is necessary and came from the path and with the body for the status 
+   * because is the thing will change and came from the body params
    * @param id id of the task
    * @param status the new status of the task
    */
   @Patch('/:id/status')
   updateTaskStatus(
       @Param('id') id:string,
-      @Body('status') status: Taskstatus) : Tasks{
+      @Body('status', TaskStatusValidation) status: Taskstatus) : Tasks{
           return this.taskService.updateTaskStatus(id, status);
     }
       
