@@ -35,6 +35,29 @@ export class TasksController {
       createTask( @Body() createTaskDto: CreateTaskDto) : Promise<Task>{
         return this.taskService.createTask(createTaskDto);
       }
+            /**
+       * Delete a task
+       * @param id id of the task to delete
+       */
+      @Delete('/:id')
+      deleteTask( @Param('id') id: string): Promise<Task> {
+            return this.taskService.deleteTask(id); 
+      
+      }
+      /**
+       * Update the status of the task
+       * The param with the id because is the id task is necessary and came from the path and with the body for the status 
+       * because is the thing will change and came from the body params
+       * @param id id of the task
+       * @param status the new status of the task
+       */
+      @Patch('/:id/status')
+      updateTaskStatus(
+          @Param('id') id:string,
+          @Body('status', TaskStatusValidation) status: Taskstatus) : Promise<Task>{
+              return this.taskService.updateTaskStatus(id, status);
+        }
+
         /*************A partir de aquí son las cosas sin mongo******************* */
 
   // /**

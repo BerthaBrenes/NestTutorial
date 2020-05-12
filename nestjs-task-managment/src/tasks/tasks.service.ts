@@ -28,6 +28,22 @@ export class TasksService {
         
         return this.taskRepository.createTask(createTaskDto);
     }
+    async deleteTask(id: string): Promise<Task>{
+        const task  = await this.getTaskById(id);
+        await this.taskRepository.delete(id);
+        return task
+    }
+    /**
+     * Update task
+     */
+    async updateTaskStatus(id:string, status:Taskstatus): Promise<Task>{
+        const task = await this.getTaskById(id);
+        task.status = status;
+        await task.save();
+        return task;
+    }
+
+
     /*************A partir de aquí son las cosas sin mongo******************* */
     /**
      * list of data for provide
