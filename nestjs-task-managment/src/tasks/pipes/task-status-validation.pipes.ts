@@ -19,8 +19,6 @@ export class TaskStatusValidation implements PipeTransform{
     * @param metadata Metadata will give you the type and value of your value
     */
  transform(value:any, metadata:ArgumentMetadata){
-    console.log('custom pip,',value);
-    console.log('metadata',metadata);
     value = value.toUpperCase();
     if(!this.isStatudValid(value)){
        throw new BadRequestException(`The "${{value}}" is not a valid status`)

@@ -4,6 +4,7 @@ import { TasksService } from './tasks.service';
 import { get } from 'http';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaskRepository } from './task.repository';
+import { AuthModule } from 'src/auth/auth.module';
 /**
  * Module for the tasks module
  */
@@ -12,7 +13,8 @@ import { TaskRepository } from './task.repository';
    * Import the repository of the database
    */
   imports:[
-    TypeOrmModule.forFeature([TaskRepository])
+    TypeOrmModule.forFeature([TaskRepository]),
+    AuthModule
   ],
   /**
    * Controller for the handlers http

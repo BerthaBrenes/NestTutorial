@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Patch, Query, UsePipes, ValidationPipe, NotFoundException, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Patch, Query, UsePipes, ValidationPipe, NotFoundException, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { Taskstatus } from './tasks.model';
 import {CreateTaskDto} from './dto/create.task.dto';
@@ -8,8 +8,17 @@ import { pathToFileURL } from 'url';
 import { GetTasksFiltersDto } from './dto/get.tasks.filter.dto';
 import { TaskStatusValidation } from './pipes/task-status-validation.pipes';
 import { Task } from './task.entity';
-
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decorator';
+import { User } from 'src/auth/user.entity';
+/**
+ * Controller for the task entity
+ */
 @Controller('tasks')
+/**
+ * Class that handler the front-end and the entity
+ */
+@UseGuards(AuthGuard())
 export class TasksController {
     constructor(private taskService:TasksService){ }
      /**
@@ -18,9 +27,11 @@ export class TasksController {
      * @param id the id of the task
      */
       @Get('/:id')
-      getTaskById( @Param('id') id: string): Promise<Task>{
-        
-        return this.taskService.getTaskById(id);
+      getTaskById( 
+        @Param('id') id: string, 
+        @GetUser() user:User
+        ): Promise<Task>{
+          return this.taskService.getTaskById(id,user);
       }
       
       /**
@@ -32,16 +43,20 @@ export class TasksController {
        */
       @Post()
       @UsePipes(ValidationPipe)
-      createTask( @Body() createTaskDto: CreateTaskDto) : Promise<Task>{
-        return this.taskService.createTask(createTaskDto);
+      createTask( 
+        @Body() createTaskDto: CreateTaskDto,
+        @GetUser() user: User) : Promise<Task>{
+        return this.taskService.createTask(createTaskDto, user);
       }
             /**
        * Delete a task
        * @param id id of the task to delete
        */
       @Delete('/:id')
-      deleteTask( @Param('id') id: string): Promise<Task> {
-            return this.taskService.deleteTask(id); 
+      deleteTask( 
+        @Param('id') id: string,
+        @GetUser() user:User): Promise<Task> {
+            return this.taskService.deleteTask(id,user); 
       
       }
       /**
@@ -54,10 +69,27 @@ export class TasksController {
       @Patch('/:id/status')
       updateTaskStatus(
           @Param('id') id:string,
-          @Body('status', TaskStatusValidation) status: Taskstatus) : Promise<Task>{
-              return this.taskService.updateTaskStatus(id, status);
+          @Body('status', TaskStatusValidation) status: Taskstatus,
+          @GetUser() user:User) : Promise<Task>{
+              return this.taskService.updateTaskStatus(id, status, user);
         }
 
+    /**
+     * Get tasks with a filter
+     * @param filterDto query filter
+     */
+      @Get()
+      getTasks(
+        @Query(ValidationPipe) filterDto: GetTasksFiltersDto,
+        @GetUser() user:User): Promise<Task[]>{
+        if(Object.keys(filterDto).length){
+              return this.taskService.getTasksWithFilters(filterDto,user);
+          }
+          else{
+            return this.taskService.getAllTask();
+          }
+        
+      }
         /*************A partir de aquí son las cosas sin mongo******************* */
 
   // /**

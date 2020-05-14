@@ -8,42 +8,88 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { TaskRepository } from './task.repository';
 import { Task } from './task.entity';
 import { TasksModule } from './tasks.module';
-
+import { User } from 'src/auth/user.entity';
+/**
+ * Injectable
+ */
 @Injectable()
 export class TasksService {
+
+    /**
+     * Handler the task operation
+     * @param taskRepository Repository of the task
+     */
     constructor(
         @InjectRepository(TaskRepository)
         private taskRepository: TaskRepository
     ){}
-    async getTaskById( id: string): Promise<Task>{
-        const found = await this.taskRepository.findOne(id);
-        if(!found){
-        throw new NotFoundException(`Not found "${id}" in the database`);
+    /**
+     * Get task by id
+     * @param id id of the param
+     */
+    async getTaskById( idTask: string, user: User): Promise<Task>{
+        const found = await this.taskRepository.findOne(idTask);
+        const ValidUser = await this.taskRepository.findOne({where :{ userId : user.id}});
+        if(JSON.stringify(found) != JSON.stringify(ValidUser)){
+        throw new NotFoundException(`Not found "${idTask}" in the database`);
         } 
         return found
         
     }
   
-    async createTask(createTaskDto: CreateTaskDto): Promise<Task>{
+    /**
+     * Create task
+     * @param createTaskDto structure object data
+     */
+    async createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task>{
         
-        return this.taskRepository.createTask(createTaskDto);
+        return this.taskRepository.createTask(createTaskDto, user);
     }
-    async deleteTask(id: string): Promise<Task>{
-        const task  = await this.getTaskById(id);
+    /**
+     * delete task
+     * @param id id of the task
+     */
+    async deleteTask(id: string, user: User): Promise<Task>{
+        const task  = await this.getTaskById(id, user);
         await this.taskRepository.delete(id);
         return task
     }
     /**
      * Update task
      */
-    async updateTaskStatus(id:string, status:Taskstatus): Promise<Task>{
-        const task = await this.getTaskById(id);
+    async updateTaskStatus(id:string, status:Taskstatus, user:User): Promise<Task>{
+        const task = await this.getTaskById(id, user);
         task.status = status;
         await task.save();
         return task;
     }
+    /**
+     * get all the tasks
+     */
+    async getAllTask(){
+        return this.taskRepository.find();
+        
+    }
+    /**
+     * 
+     * @param filterDto filter param
+     */
+    getTasksWithFilters(filterDto: GetTasksFiltersDto, user: User): Promise<Task[]>{
+        const {status, search} = filterDto;
+        if(status){
+            return this.taskRepository.find({where: { status: status,userId : user.id } })
 
-
+        }
+        if(search){
+            const description = this.taskRepository.find({where:{ description: search, userId: user.id} })
+            if(description){
+                return description
+            }else{
+                return this.taskRepository.find({ title: search })
+            }
+        }
+    }
+            
     /*************A partir de aquí son las cosas sin mongo******************* */
     /**
      * list of data for provide
